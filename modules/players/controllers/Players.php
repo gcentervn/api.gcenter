@@ -1,45 +1,48 @@
 <?php
-class Players extends Trongate {
+class Players extends Trongate
+{
 
     private $default_limit = 20;
-    private $per_page_options = array(10, 20, 50, 100);    
+    private $per_page_options = array(10, 20, 50, 100);
 
-    function create() {
+    function create()
+    {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
         $update_id = (int) segment(3);
         $submit = post('submit');
 
-        if (($submit == '') && ($update_id>0)) {
+        if (($submit == '') && ($update_id > 0)) {
             $data = $this->_get_data_from_db($update_id);
         } else {
             $data = $this->_get_data_from_post();
         }
 
-        if ($update_id>0) {
+        if ($update_id > 0) {
             $data['headline'] = 'Update Player Record';
-            $data['cancel_url'] = BASE_URL.'players/show/'.$update_id;
+            $data['cancel_url'] = BASE_URL . 'players/show/' . $update_id;
         } else {
             $data['headline'] = 'Create New Player Record';
-            $data['cancel_url'] = BASE_URL.'players/manage';
+            $data['cancel_url'] = BASE_URL . 'players/manage';
         }
 
-        $data['form_location'] = BASE_URL.'players/submit/'.$update_id;
+        $data['form_location'] = BASE_URL . 'players/submit/' . $update_id;
         $data['view_file'] = 'create';
         $this->template('admin', $data);
     }
 
-    function manage() {
+    function manage()
+    {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
         if (segment(4) !== '') {
             $data['headline'] = 'Search Results';
             $searchphrase = trim($_GET['searchphrase']);
-            $params['username'] = '%'.$searchphrase.'%';
-            $params['display_name'] = '%'.$searchphrase.'%';
-            $params['email_address'] = '%'.$searchphrase.'%';
+            $params['username'] = '%' . $searchphrase . '%';
+            $params['display_name'] = '%' . $searchphrase . '%';
+            $params['email_address'] = '%' . $searchphrase . '%';
             $sql = 'select * from players
             WHERE username LIKE :username
             OR display_name LIKE :display_name
@@ -67,7 +70,8 @@ class Players extends Trongate {
         $this->template('admin', $data);
     }
 
-    function show() {
+    function show()
+    {
         $this->module('trongate_security');
         $token = $this->trongate_security->_make_sure_allowed();
         $update_id = (int) segment(3);
@@ -89,8 +93,9 @@ class Players extends Trongate {
             $this->template('admin', $data);
         }
     }
-    
-    function _reduce_rows($all_rows) {
+
+    function _reduce_rows($all_rows)
+    {
         $rows = [];
         $start_index = $this->_get_offset();
         $limit = $this->_get_limit();
@@ -99,7 +104,7 @@ class Players extends Trongate {
         $count = -1;
         foreach ($all_rows as $row) {
             $count++;
-            if (($count>=$start_index) && ($count<$end_index)) {
+            if (($count >= $start_index) && ($count < $end_index)) {
                 $row->active = ($row->active == 1 ? 'yes' : 'no');
                 $rows[] = $row;
             }
@@ -108,7 +113,8 @@ class Players extends Trongate {
         return $rows;
     }
 
-    function submit() {
+    function submit()
+    {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
@@ -116,7 +122,7 @@ class Players extends Trongate {
 
         if ($submit == 'Submit') {
 
-                        $this->validation_helper->set_rules('username', 'Username', 'required|min_length[3]|max_length[66]');
+            $this->validation_helper->set_rules('username', 'Username', 'required|min_length[3]|max_length[66]');
             $this->validation_helper->set_rules('display_name', 'Display Name', 'required|min_length[3]|max_length[66]');
             $this->validation_helper->set_rules('email_address', 'Email Address', 'min_length[7]|max_length[66]|valid_email_address|valid_email');
 
@@ -128,8 +134,8 @@ class Players extends Trongate {
                 $data = $this->_get_data_from_post();
                 $data['url_string'] = strtolower(url_title($data['username']));
                 $data['active'] = ($data['active'] == 1 ? 1 : 0);
-                
-                if ($update_id>0) {
+
+                if ($update_id > 0) {
                     //update an existing record
                     $this->model->update($update_id, $data, 'players');
                     $flash_msg = 'The record was successfully updated';
@@ -140,25 +146,23 @@ class Players extends Trongate {
                 }
 
                 set_flashdata($flash_msg);
-                redirect('players/show/'.$update_id);
-
+                redirect('players/show/' . $update_id);
             } else {
                 //form submission error
                 $this->create();
             }
-
         }
-
     }
 
-    function submit_delete() {
+    function submit_delete()
+    {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
         $submit = post('submit');
         $params['update_id'] = (int) segment(3);
 
-        if (($submit == 'Yes - Delete Now') && ($params['update_id']>0)) {
+        if (($submit == 'Yes - Delete Now') && ($params['update_id'] > 0)) {
             //delete all of the comments associated with this record
             $sql = 'delete from trongate_comments where target_table = :module and update_id = :update_id';
             $params['module'] = 'players';
@@ -176,7 +180,8 @@ class Players extends Trongate {
         }
     }
 
-    function _get_limit() {
+    function _get_limit()
+    {
         if (isset($_SESSION['selected_per_page'])) {
             $limit = $this->per_page_options[$_SESSION['selected_per_page']];
         } else {
@@ -186,11 +191,12 @@ class Players extends Trongate {
         return $limit;
     }
 
-    function _get_offset() {
+    function _get_offset()
+    {
         $page_num = (int) segment(3);
 
-        if ($page_num>1) {
-            $offset = ($page_num-1)*$this->_get_limit();
+        if ($page_num > 1) {
+            $offset = ($page_num - 1) * $this->_get_limit();
         } else {
             $offset = 0;
         }
@@ -198,12 +204,14 @@ class Players extends Trongate {
         return $offset;
     }
 
-    function _get_selected_per_page() {
+    function _get_selected_per_page()
+    {
         $selected_per_page = (isset($_SESSION['selected_per_page'])) ? $_SESSION['selected_per_page'] : 1;
         return $selected_per_page;
     }
 
-    function set_per_page($selected_index) {
+    function set_per_page($selected_index)
+    {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
@@ -215,7 +223,8 @@ class Players extends Trongate {
         redirect('players/manage');
     }
 
-    function _get_data_from_db($update_id) {
+    function _get_data_from_db($update_id)
+    {
         $record_obj = $this->model->get_where($update_id, 'players');
 
         if ($record_obj == false) {
@@ -223,16 +232,16 @@ class Players extends Trongate {
             die();
         } else {
             $data = (array) $record_obj;
-            return $data;        
+            return $data;
         }
     }
 
-    function _get_data_from_post() {
+    function _get_data_from_post()
+    {
         $data['active'] = post('active', true);
         $data['username'] = post('username', true);
         $data['display_name'] = post('display_name', true);
-        $data['email_address'] = post('email_address', true);        
+        $data['email_address'] = post('email_address', true);
         return $data;
     }
-
 }
