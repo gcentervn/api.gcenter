@@ -7,6 +7,22 @@
     "authorization": "*"
   },
 
+  "Register": {
+    "url_segments": "auth/register",
+    "request_type": "POST",
+    "description": "Register",
+    "enableParams": true,
+    "authorization": "*"
+  },
+
+  "Register From App": {
+    "url_segments": "auth/register_from_app",
+    "request_type": "POST",
+    "description": "Register",
+    "enableParams": true,
+    "authorization": "*"
+  },
+
   "Remember Positions": {
     "url_segments": "auth/remember_positions",
     "request_type": "POST",
