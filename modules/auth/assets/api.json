@@ -1,12 +1,4 @@
 {
-  "Login": {
-    "url_segments": "auth/login_from_app",
-    "request_type": "POST",
-    "description": "Login",
-    "enableParams": true,
-    "authorization": "*"
-  },
-
   "Register": {
     "url_segments": "auth/register",
     "request_type": "POST",
@@ -15,10 +7,10 @@
     "authorization": "*"
   },
 
-  "Register From App": {
-    "url_segments": "auth/register_from_app",
+  "Login": {
+    "url_segments": "auth/login",
     "request_type": "POST",
-    "description": "Register",
+    "description": "Login",
     "enableParams": true,
     "authorization": "*"
   },

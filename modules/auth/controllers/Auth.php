@@ -12,10 +12,50 @@ class Auth extends Trongate
         if ($post_data) {
             $data['username'] = $post_data['username'];
             $data['password'] = $post_data['password'] ? $post_data['password'] : '';
-            $data['email_address'] = $post_data['email_address'] ? $post_data['email_address'] : '';
+            $data['email_address'] = (isset($post_data['email_address'])) ? $post_data['email_address'] : $post_data['username'] . '@gcenter.vn';
             return $data;
         } else {
             return false;
+        }
+    }
+
+    function login()
+    {
+        $posted_data = file_get_contents('php://input');
+        $post_data = (array) json_decode($posted_data);
+
+
+        $data = $this->_get_data_from_app();
+
+        if ($data['username'] == '' || $data['password'] == '') {
+            $error = [
+                "msg" => 'Máy chủ không nhận được dữ liệu !',
+                "code" => '1001',
+            ];
+            http_response_code(400);
+            exit(json_encode($error));
+        } else {
+            $check_login = $this->check_login($data['username'], $data['password']);
+
+            if ($check_login == false) {
+                $error = [
+                    "msg" => 'Sai tài khoản hoặc mật khẩu !',
+                    "code" => '1004',
+                ];
+                http_response_code(400);
+                exit(json_encode($error));
+            } else {
+                $params['username'] = $data['username'];
+                $params['email_address'] = $data['username'];
+                $sql = 'select * from players where username =:username or email_address =:email_address';
+                $rows = $this->model->query_bind($sql, $params, 'object');
+                $player_obj = $rows[0];
+                $player_id = $player_obj->id;
+                $trongate_user_id = $player_obj->trongate_user_id;
+                $remember = isset($post_data['remember']) ? $post_data['remember'] : false;
+
+                $this->_finish_authentication($player_id, $remember);
+            }
         }
     }
 
@@ -25,10 +65,8 @@ class Auth extends Trongate
 
         if ($data['username'] == '' || $data['password'] == '') {
             $error = [
-                "error" => [
-                    "msg" => 'Máy chủ không nhận được dữ liệu !',
-                    "code" => '1001',
-                ]
+                "msg" => 'Máy chủ không nhận được dữ liệu !',
+                "code" => '1001',
             ];
             http_response_code(400);
             exit(json_encode($error));
@@ -37,10 +75,8 @@ class Auth extends Trongate
 
             if ($check_username == false) {
                 $error = [
-                    "error" => [
-                        "msg" => 'Tài khoản hoặc email đã có người sử dụng !',
-                        "code" => '1002',
-                    ]
+                    "msg" => 'Tài khoản hoặc email đã có người sử dụng !',
+                    "code" => '1002',
                 ];
                 http_response_code(400);
                 exit(json_encode($error));
@@ -66,6 +102,7 @@ class Auth extends Trongate
                     $this->_send_activate_account_email($player_obj, $activate_url);
                     redirect('players/check_your_email');
                 } else {
+
                     $this->_finish_authentication($player_id);
                 }
             }
@@ -84,10 +121,8 @@ class Auth extends Trongate
 
                 if ($player_obj == false) {
                     $error = [
-                        "error" => [
-                            "msg" => 'Không tìm thấy thông tin người chơi !',
-                            "code" => '1003',
-                        ]
+                        "msg" => 'Không tìm thấy thông tin người chơi !',
+                        "code" => '1003',
                     ];
                     http_response_code(400);
                     exit(json_encode($error));
@@ -118,12 +153,44 @@ class Auth extends Trongate
         }
     }
 
+    function check_login($str, $pas)
+    {
+        $params['username'] = $str;
+        $params['email_address'] = $str;
+        $sql = 'select * from players where username = :username OR email_address = :email_address';
+        $rows = $this->model->query_bind($sql, $params, 'object');
+
+        if (!isset($rows[0])) {
+            //now valid username or email
+            return false;
+        } else {
+            //record found, but what about the password?
+            $stored_password = isset($rows[0]->password) ? $rows[0]->password : '';
+            $password = $pas;
+            $password_result = $this->_verify_hash($password, $stored_password);
+
+            if ($password_result == false) {
+                //wrong password
+                return false;
+            } else {
+                //password was correct
+                return true;
+            }
+        }
+    }
+
     function _hash_string($str)
     {
-        $hashed_string = password_hash($str . $this->sceret_salt, PASSWORD_BCRYPT, array(
+        $hashed_string = password_hash($str, PASSWORD_BCRYPT, array(
             'cost' => 11
         ));
         return $hashed_string;
+    }
+
+    function _verify_hash($plain_text_str, $hashed_string)
+    {
+        $result = password_verify($plain_text_str, $hashed_string);
+        return $result; //TRUE or FALSE
     }
 
     function _create_new_trongate_user()
