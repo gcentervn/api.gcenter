@@ -96,6 +96,9 @@ class Auth extends Trongate
 
     function register()
     {
+        $this->module('trongate_tokens');
+        $this->trongate_tokens->_destroy();
+
         $data = $this->_get_data_from_app();
 
         if ($data['username'] == '' || $data['password'] == '') {
