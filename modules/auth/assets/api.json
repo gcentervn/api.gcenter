@@ -1,12 +1,4 @@
 {
-  "Login": {
-    "url_segments": "auth/login_from_app",
-    "request_type": "POST",
-    "description": "Login",
-    "enableParams": true,
-    "authorization": "*"
-  },
-
   "Remember Positions": {
     "url_segments": "auth/remember_positions",
     "request_type": "POST",

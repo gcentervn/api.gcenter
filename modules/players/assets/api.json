@@ -1,4 +1,12 @@
 {
+  "May Be Registed": {
+    "url_segments": "players/check_if_exits",
+    "request_type": "POST",
+    "description": "Fetch rows from table",
+    "enableParams": true,
+    "authorization": "*"
+  },
+
   "Get": {
     "url_segments": "api/get/players",
     "request_type": "GET",
