@@ -1,20 +1,4 @@
 {
-  "Register": {
-    "url_segments": "auth/register",
-    "request_type": "POST",
-    "description": "Register",
-    "enableParams": true,
-    "authorization": "*"
-  },
-
-  "Login": {
-    "url_segments": "auth/login",
-    "request_type": "POST",
-    "description": "Login",
-    "enableParams": true,
-    "authorization": "*"
-  },
-
   "Remember Positions": {
     "url_segments": "auth/remember_positions",
     "request_type": "POST",

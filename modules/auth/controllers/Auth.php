@@ -2,7 +2,6 @@
 class Auth extends Trongate
 {
     private $user_level_id = 1001;
-    private $sceret_salt = 'taliban666';
     private $auto_active_member = true;
 
     function _get_data_from_app()
@@ -16,6 +15,42 @@ class Auth extends Trongate
             return $data;
         } else {
             return false;
+        }
+    }
+
+    function verify_token()
+    {
+        if (!isset($_SERVER['HTTP_TRONGATETOKEN'])) {
+            $error = [
+                "msg" => 'Phiên đăng nhập đã hết, hãy đăng nhập lại !',
+                "code" => '1005',
+            ];
+            http_response_code(400);
+            exit(json_encode($error));
+        } else {
+            $token = $_SERVER['HTTP_TRONGATETOKEN'];
+            $result = $this->model->get_one_where('token', $token, 'trongate_tokens');
+
+            if ($result == false) {
+                $error = [
+                    "msg" => 'Phiên không hợp lệ, hãy đăng nhập lại !',
+                    "code" => '1006',
+                ];
+                http_response_code(400);
+                exit(json_encode($error));
+            } else {
+                $this->module('trongate_tokens');
+                $player_obj = $this->trongate_tokens->_get_user_obj($token);
+
+                $result = [
+                    "auth_user" => [
+                        "trongate_user_id" => $player_obj->trongate_user_id,
+                        "user_level" => $player_obj->user_level ?: '',
+                    ]
+                ];
+                http_response_code(200);
+                echo json_encode($result);
+            }
         }
     }
 
@@ -257,19 +292,13 @@ class Auth extends Trongate
         } else {
             $this->module('trongate_tokens');
             $player_token = $this->model->get_one_where('user_id', $player_obj->trongate_user_id, 'trongate_tokens');
-            $player_role = $this->trongate_tokens->_get_user_obj($player_token->token);
+            $player_obj = $this->trongate_tokens->_get_user_obj($player_token->token);
 
             $result = [
-                "status" => true,
-                "msg" => 'Đăng ký thành công!',
                 "trongateToken" => $player_token->token,
                 "auth_user" => [
-                    "id" => $player_obj->id,
-                    "provider" => $player_obj->provider ?: '',
-                    "username" => $player_obj->username ?: '',
-                    "provider_username" => $player_obj->provider_username ?: '',
-                    "display_name" => $player_obj->display_name,
-                    "role" => $player_role->user_level,
+                    "trongate_user_id" => $player_obj->trongate_user_id,
+                    "user_level" => $player_obj->user_level ?: '',
                 ]
             ];
             http_response_code(200);
