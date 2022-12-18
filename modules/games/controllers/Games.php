@@ -29,6 +29,48 @@ class Games extends Trongate
         echo json_encode((object) $result);
     }
 
+    function get_game_by_id()
+    {
+        $post_data = file_get_contents('php://input');
+        $data = (array) json_decode($post_data);
+
+        if (!isset($data['id'])) {
+            $error = [
+                "msg" => 'Thông tin truy vấn rỗng!',
+                "code" => '2001',
+            ];
+            http_response_code(400);
+            exit(json_encode($error));
+        } else {
+
+            $result = $this->model->get_one_where('id', $data['id']);
+            $result->categories = $this->_set_game_category($result->id);
+            $result->os_systems = $this->_set_game_os_system($result->id);
+            $result->picture_files = $this->_get_picture_file($result->id);
+            http_response_code(200);
+            echo json_encode($result);
+        }
+    }
+
+    function _get_picture_file($update_id)
+    {
+        $files_name = [];
+        $dir = __DIR__ . '/../assets/games_pictures/' . $update_id . '/';
+        $all_files = glob("$dir*.*", GLOB_BRACE);
+        for ($i = 0; $i < count($all_files); $i++) {
+            $image_name = $all_files[$i];
+            $supported_format = array('gif', 'jpg', 'jpeg', 'png');
+            $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
+            if (in_array($ext, $supported_format)) {
+                $files_name[$i] = basename($image_name);
+            } else {
+                continue;
+            }
+        }
+
+        return $files_name;
+    }
+
     function _set_game_category($id)
     {
         $result = [];
@@ -50,7 +92,7 @@ class Games extends Trongate
             $result[] = $row->name;
         }
 
-        return json_encode((object) $result);
+        return $result;
     }
 
     function _set_game_os_system($id)
@@ -74,7 +116,7 @@ class Games extends Trongate
             $result[] = $row->name;
         }
 
-        return json_encode((object) $result);
+        return $result;
     }
 
     function create()
