@@ -17,7 +17,7 @@
         ?>
     </div>
 </div>
-<div class="two-col">
+<div class="three-col">
     <div class="card">
         <div class="card-heading">
             Player Details
@@ -43,6 +43,47 @@
             </div>
         </div>
     </div>
+        <div class="card">
+        <div class="card-heading">
+            Picture
+        </div>
+        <div class="card-body picture-preview">
+            <?php
+            if ($draw_picture_uploader == true) {
+                echo form_open_upload(segment(1).'/submit_upload_picture/'.$update_id);
+                echo validation_errors();
+                echo '<p>Please choose a picture from your computer and then press \'Upload\'.</p>';
+                echo form_file_select('picture');
+                echo form_submit('submit', 'Upload');
+                echo form_close();
+            } else {
+            ?>
+                <p class="text-center">
+                    <button class="danger" onclick="openModal('delete-picture-modal')"><i class="fa fa-trash"></i> Delete Picture</button>
+                </p>
+                <p class="text-center">
+                    <img src="<?= $picture_path ?>" alt="picture preview">
+                </p>
+
+                <div class="modal" id="delete-picture-modal" style="display: none;">
+                    <div class="modal-heading danger"><i class="fa fa-trash"></i> Delete Picture</div>
+                    <div class="modal-body">
+                        <?= form_open(segment(1).'/ditch_picture/'.$update_id) ?>
+                            <p>Are you sure?</p>
+                            <p>You are about to delete the picture.  This cannot be undone. Do you really want to do this?</p>
+                            <p>
+                                <button type="button" name="close" value="Cancel" class="alt" onclick="closeModal()">Cancel</button>
+                                <button type="submit" name="submit" value="Yes - Delete Now" class="danger">Yes - Delete Now</button>
+                            </p>
+                        <?= form_close() ?>
+                    </div>
+                </div>
+
+            <?php 
+            }
+            ?>
+        </div>
+    </div><?= Modules::run('trongate_filezone/_draw_summary_panel', $update_id, $filezone_settings); ?>
     <div class="card">
         <div class="card-heading">
             Comments

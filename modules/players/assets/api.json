@@ -1,4 +1,26 @@
 {
+"Get Player By ID": {
+  "url_segments": "players/get_player_by_id",
+  "request_type": "POST",
+  "description": "Get Player By ID",
+  "enableParams": true,
+  "authorization":{  
+      "roles": [
+          "player", "admin"
+      ]
+  }
+},
+  "Get All Players": {
+    "url_segments": "players/get_all_players",
+    "request_type": "GET",
+    "description": "Fetch rows from table",
+    "enableParams": true,
+    "authorization":{  
+        "roles": [
+            "player", "admin"
+        ]
+    }
+  },
   "May Be Registed": {
     "url_segments": "players/check_if_exits",
     "request_type": "POST",
