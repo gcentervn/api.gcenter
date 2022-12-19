@@ -1,5 +1,4 @@
-config/config.php
-config/database.php
+config/*
 
 ### Linux ###
 *~
