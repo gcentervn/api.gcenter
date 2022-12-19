@@ -6,8 +6,8 @@
     </div>
     <div class="card-body">
         <?php 
-        echo anchor('players/manage', 'View All Players', array("class" => "button alt"));
-        echo anchor('players/create/'.$update_id, 'Update Details', array("class" => "button"));
+        echo anchor('games_os_systems/manage', 'View All Games Os Systems', array("class" => "button alt"));
+        echo anchor('games_os_systems/create/'.$update_id, 'Update Details', array("class" => "button"));
         $attr_delete = array( 
             "class" => "danger go-right",
             "id" => "btn-delete-modal",
@@ -20,25 +20,17 @@
 <div class="three-col">
     <div class="card">
         <div class="card-heading">
-            Player Details
+            Games OS System Details
         </div>
         <div class="card-body">
             <div class="record-details">
                 <div class="row">
-                    <div>Active</div>
-                    <div><?= $active ?></div>
+                    <div>Name</div>
+                    <div><?= $name ?></div>
                 </div>
                 <div class="row">
-                    <div>Username</div>
-                    <div><?= $username ?></div>
-                </div>
-                <div class="row">
-                    <div>Display Name</div>
-                    <div><?= $display_name ?></div>
-                </div>
-                <div class="row">
-                    <div>Email Address</div>
-                    <div><?= $email_address ?></div>
+                    <div>Description</div>
+                    <div><?= $description ?></div>
                 </div>
             </div>
         </div>
@@ -83,7 +75,9 @@
             }
             ?>
         </div>
-    </div><?= Modules::run('trongate_filezone/_draw_summary_panel', $update_id, $filezone_settings); ?>
+    </div>
+    <?= Modules::run('module_relations/_draw_summary_panel', 'games', $token) ?>
+
     <div class="card">
         <div class="card-heading">
             Comments
@@ -114,9 +108,9 @@
 <div class="modal" id="delete-modal" style="display: none;">
     <div class="modal-heading danger"><i class="fa fa-trash"></i> Delete Record</div>
     <div class="modal-body">
-        <?= form_open('players/submit_delete/'.$update_id) ?>
+        <?= form_open('games_os_systems/submit_delete/'.$update_id) ?>
         <p>Are you sure?</p>
-        <p>You are about to delete a Player record.  This cannot be undone.  Do you really want to do this?</p> 
+        <p>You are about to delete a Games OS System record.  This cannot be undone.  Do you really want to do this?</p> 
         <?php 
         echo '<p>'.form_button('close', 'Cancel', $attr_close);
         echo form_submit('submit', 'Yes - Delete Now', array("class" => 'danger')).'</p>';

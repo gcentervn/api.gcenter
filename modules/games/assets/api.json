@@ -1,36 +1,13 @@
 {
-"Get Player By ID": {
-  "url_segments": "players/get_player_by_id",
-  "request_type": "POST",
-  "description": "Get Player By ID",
-  "enableParams": true,
-  "authorization":{  
-      "roles": [
-          "player", "admin"
-      ]
-  }
-},
-  "Get All Players": {
-    "url_segments": "players/get_all_players",
+  "Get All Games": {
+    "url_segments": "games/get_all_games",
     "request_type": "GET",
-    "description": "Fetch rows from table",
-    "enableParams": true,
-    "authorization":{  
-        "roles": [
-            "player", "admin"
-        ]
-    }
-  },
-  "May Be Registed": {
-    "url_segments": "players/check_if_exits",
-    "request_type": "POST",
-    "description": "Fetch rows from table",
+    "description": "Get games",
     "enableParams": true,
     "authorization": "*"
   },
-
   "Get": {
-    "url_segments": "api/get/players",
+    "url_segments": "api/get/games",
     "request_type": "GET",
     "description": "Fetch rows from table",
     "enableParams": true,
@@ -41,7 +18,7 @@
     }
   },
   "Get By Post": {
-    "url_segments": "api/get/players",
+    "url_segments": "api/get/games",
     "request_type": "POST",
     "description": "Fetch rows from table using POST request.",
     "enableParams": true,
@@ -52,7 +29,7 @@
     }
   },
   "Find One": {
-    "url_segments": "api/get/players/{id}",
+    "url_segments": "api/get/games/{id}",
     "request_type": "GET",
     "description": "Fetch one row",
     "required_fields": [
@@ -63,7 +40,7 @@
     ]
   },
   "Exists": {
-    "url_segments": "api/exists/players/{id}",
+    "url_segments": "api/exists/games/{id}",
     "request_type": "GET",
     "description": "Check if instance exists",
     "required_fields": [
@@ -74,13 +51,13 @@
     ]
   },
   "Count": {
-    "url_segments": "api/count/players",
+    "url_segments": "api/count/games",
     "request_type": "GET",
     "description": "Count number of records",
     "enableParams": true
   },
   "Count By Post": {
-    "url_segments": "api/count/players",
+    "url_segments": "api/count/games",
     "request_type": "POST",
     "description": "Count number of records using POST request",
     "enableParams": true,
@@ -91,19 +68,19 @@
     }
   },
   "Create": {
-    "url_segments": "api/create/players",
+    "url_segments": "api/create/games",
     "request_type": "POST",
     "description": "Insert database record",
     "enableParams": true
   },
   "Insert Batch": {
-    "url_segments": "api/batch/players",
+    "url_segments": "api/batch/games",
     "request_type": "POST",
     "description": "Insert multiple records",
     "enableParams": true
   },
   "Update": {
-    "url_segments": "api/update/players/{id}",
+    "url_segments": "api/update/games/{id}",
     "request_type": "PUT",
     "description": "Update a database record",
     "enableParams": true,
@@ -115,13 +92,13 @@
     ]
   },
   "Destroy": {
-    "url_segments": "api/destroy/players",
+    "url_segments": "api/destroy/games",
     "request_type": "DELETE",
     "description": "Delete row or rows",
     "enableParams": true
   },
   "Delete One": {
-    "url_segments": "api/delete/players/{id}",
+    "url_segments": "api/delete/games/{id}",
     "request_type": "DELETE",
     "description": "Delete one row",
     "required_fields": [

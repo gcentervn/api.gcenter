@@ -6,8 +6,8 @@
     </div>
     <div class="card-body">
         <?php 
-        echo anchor('players/manage', 'View All Players', array("class" => "button alt"));
-        echo anchor('players/create/'.$update_id, 'Update Details', array("class" => "button"));
+        echo anchor('games/manage', 'View All Games', array("class" => "button alt"));
+        echo anchor('games/create/'.$update_id, 'Update Details', array("class" => "button"));
         $attr_delete = array( 
             "class" => "danger go-right",
             "id" => "btn-delete-modal",
@@ -20,25 +20,59 @@
 <div class="three-col">
     <div class="card">
         <div class="card-heading">
-            Player Details
+            Game Details
         </div>
         <div class="card-body">
             <div class="record-details">
                 <div class="row">
-                    <div>Active</div>
-                    <div><?= $active ?></div>
+                    <div>Offline</div>
+                    <div><?= $offline ?></div>
                 </div>
                 <div class="row">
-                    <div>Username</div>
-                    <div><?= $username ?></div>
+                    <div>Offline Status</div>
+                    <div><?= $offline_status ?></div>
                 </div>
                 <div class="row">
-                    <div>Display Name</div>
-                    <div><?= $display_name ?></div>
+                    <div>Created Date</div>
+                    <div><?= date('l jS F Y \a\t H:i',  strtotime($created_date)) ?></div>
                 </div>
                 <div class="row">
-                    <div>Email Address</div>
-                    <div><?= $email_address ?></div>
+                    <div>Updated Date</div>
+                    <div><?= date('l jS F Y \a\t H:i',  strtotime($updated_date)) ?></div>
+                </div>
+                <div class="row">
+                    <div>Name</div>
+                    <div><?= $name ?></div>
+                </div>
+                <div class="row">
+                    <div>Short Name</div>
+                    <div><?= $short_name ?></div>
+                </div>
+                <div class="row">
+                    <div>Description</div>
+                    <div><?= $description ?></div>
+                </div>
+                <div class="row">
+                    <div class="full-width">
+                        <div><b>Detail Information</b></div>
+                        <div><?= nl2br($detail_information) ?></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div>URL Homepage</div>
+                    <div><?= $url_homepage ?></div>
+                </div>
+                <div class="row">
+                    <div>URL Social</div>
+                    <div><?= $url_social ?></div>
+                </div>
+                <div class="row">
+                    <div>URL Playnow</div>
+                    <div><?= $url_playnow ?></div>
+                </div>
+                <div class="row">
+                    <div>URL Download</div>
+                    <div><?= $url_download ?></div>
                 </div>
             </div>
         </div>
@@ -84,6 +118,12 @@
             ?>
         </div>
     </div><?= Modules::run('trongate_filezone/_draw_summary_panel', $update_id, $filezone_settings); ?>
+    
+    <?= Modules::run('module_relations/_draw_summary_panel', 'games_categories', $token) ?>
+
+    
+    <?= Modules::run('module_relations/_draw_summary_panel', 'games_os_systems', $token) ?>
+
     <div class="card">
         <div class="card-heading">
             Comments
@@ -114,9 +154,9 @@
 <div class="modal" id="delete-modal" style="display: none;">
     <div class="modal-heading danger"><i class="fa fa-trash"></i> Delete Record</div>
     <div class="modal-body">
-        <?= form_open('players/submit_delete/'.$update_id) ?>
+        <?= form_open('games/submit_delete/'.$update_id) ?>
         <p>Are you sure?</p>
-        <p>You are about to delete a Player record.  This cannot be undone.  Do you really want to do this?</p> 
+        <p>You are about to delete a Game record.  This cannot be undone.  Do you really want to do this?</p> 
         <?php 
         echo '<p>'.form_button('close', 'Cancel', $attr_close);
         echo form_submit('submit', 'Yes - Delete Now', array("class" => 'danger')).'</p>';

@@ -59,7 +59,6 @@ class Auth extends Trongate
         $posted_data = file_get_contents('php://input');
         $post_data = (array) json_decode($posted_data);
 
-
         $data = $this->_get_data_from_app();
 
         if ($data['username'] == '' || $data['password'] == '') {
@@ -96,9 +95,6 @@ class Auth extends Trongate
 
     function register()
     {
-        $this->module('trongate_tokens');
-        $this->trongate_tokens->_destroy();
-
         $data = $this->_get_data_from_app();
 
         if ($data['username'] == '' || $data['password'] == '') {

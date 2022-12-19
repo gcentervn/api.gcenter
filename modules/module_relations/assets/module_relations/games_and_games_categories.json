@@ -1,0 +1,1 @@
+[{"module_name":"games","record_name_singular":"game","record_name_plural":"games","identifier_column":"name"},{"module_name":"games_categories","record_name_singular":"games category","record_name_plural":"games categories","identifier_column":"name"},{"relationship_type":"many to many"}]

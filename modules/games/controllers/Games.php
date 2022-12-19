@@ -1,5 +1,5 @@
 <?php
-class Players extends Trongate
+class Games extends Trongate
 {
 
     private $default_limit = 20;
@@ -7,8 +7,8 @@ class Players extends Trongate
 
     function _init_filezone_settings()
     {
-        $data['targetModule'] = 'players';
-        $data['destination'] = 'players_pictures';
+        $data['targetModule'] = 'games';
+        $data['destination'] = 'games_pictures';
         $data['max_file_size'] = 1200;
         $data['max_width'] = 2500;
         $data['max_height'] = 1400;
@@ -16,23 +16,21 @@ class Players extends Trongate
         return $data;
     }
 
-    function get_all_players()
+    function get_all_games()
     {
         api_auth();
-        $result = $this->model->get('id');
-        foreach ($result as $player) {
-            unset($player->password);
-            unset($player->code);
-            unset($player->user_token);
+        $result = $this->model->get_where_custom('offline', 0, '=', 'created_date');
+        foreach ($result as $key => $game) {
+            $result[$key]->categories = $this->_set_game_category($game->id);
+            $result[$key]->os_systems = $this->_set_game_os_system($game->id);
         }
 
         http_response_code(200);
-        echo json_encode($result);
+        echo json_encode((object) $result);
     }
 
-    function get_player_by_id()
+    function get_game_by_id()
     {
-        api_auth();
         $post_data = file_get_contents('php://input');
         $data = (array) json_decode($post_data);
 
@@ -44,13 +42,81 @@ class Players extends Trongate
             http_response_code(400);
             exit(json_encode($error));
         } else {
-            $result = $this->model->get_one_where('trongate_user_id', $data['id']);
-            unset($result->password);
-            unset($result->code);
-            unset($result->user_token);
+
+            $result = $this->model->get_one_where('id', $data['id']);
+            $result->categories = $this->_set_game_category($result->id);
+            $result->os_systems = $this->_set_game_os_system($result->id);
+            $result->picture_files = $this->_get_picture_file($result->id);
             http_response_code(200);
             echo json_encode($result);
         }
+    }
+
+    function _get_picture_file($update_id)
+    {
+        $files_name = [];
+        $dir = __DIR__ . '/../assets/games_pictures/' . $update_id . '/';
+        $all_files = glob("$dir*.*", GLOB_BRACE);
+        for ($i = 0; $i < count($all_files); $i++) {
+            $image_name = $all_files[$i];
+            $supported_format = array('gif', 'jpg', 'jpeg', 'png');
+            $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
+            if (in_array($ext, $supported_format)) {
+                $files_name[$i] = basename($image_name);
+            } else {
+                continue;
+            }
+        }
+
+        return $files_name;
+    }
+
+    function _set_game_category($id)
+    {
+        $result = [];
+        $params['id'] = $id;
+        $sql = 'SELECT
+        games_categories.`name`
+        FROM
+        games_categories
+        INNER JOIN
+        associated_games_and_games_categories
+        ON 
+            games_categories.id = associated_games_and_games_categories.games_categories_id
+        WHERE
+        associated_games_and_games_categories.games_id = :id';
+
+        $rows = $this->model->query_bind($sql, $params, 'object');
+
+        foreach ($rows as $row) {
+            $result[] = $row->name;
+        }
+
+        return $result;
+    }
+
+    function _set_game_os_system($id)
+    {
+        $result = [];
+        $params['id'] = $id;
+        $sql = 'SELECT
+        games_os_systems.`name`
+        FROM
+        games_os_systems
+        INNER JOIN
+        associated_games_and_games_os_systems
+        ON 
+            games_os_systems.id = associated_games_and_games_os_systems.games_os_systems_id
+        WHERE
+        associated_games_and_games_os_systems.games_id = :id';
+
+        $rows = $this->model->query_bind($sql, $params, 'object');
+
+        foreach ($rows as $row) {
+            $result[] = $row->name;
+        }
+
+        return $result;
     }
 
     function create()
@@ -68,14 +134,14 @@ class Players extends Trongate
         }
 
         if ($update_id > 0) {
-            $data['headline'] = 'Update Player Record';
-            $data['cancel_url'] = BASE_URL . 'players/show/' . $update_id;
+            $data['headline'] = 'Update Game Record';
+            $data['cancel_url'] = BASE_URL . 'games/show/' . $update_id;
         } else {
-            $data['headline'] = 'Create New Player Record';
-            $data['cancel_url'] = BASE_URL . 'players/manage';
+            $data['headline'] = 'Create New Game Record';
+            $data['cancel_url'] = BASE_URL . 'games/manage';
         }
 
-        $data['form_location'] = BASE_URL . 'players/submit/' . $update_id;
+        $data['form_location'] = BASE_URL . 'games/submit/' . $update_id;
         $data['view_file'] = 'create';
         $this->template('admin', $data);
     }
@@ -88,32 +154,42 @@ class Players extends Trongate
         if (segment(4) !== '') {
             $data['headline'] = 'Search Results';
             $searchphrase = trim($_GET['searchphrase']);
-            $params['username'] = '%' . $searchphrase . '%';
-            $params['display_name'] = '%' . $searchphrase . '%';
-            $params['email_address'] = '%' . $searchphrase . '%';
-            $sql = 'select * from players
-            WHERE username LIKE :username
-            OR display_name LIKE :display_name
-            OR email_address LIKE :email_address
+            $params['offline_status'] = '%' . $searchphrase . '%';
+            $params['name'] = '%' . $searchphrase . '%';
+            $params['short_name'] = '%' . $searchphrase . '%';
+            $params['description'] = '%' . $searchphrase . '%';
+            $params['url_homepage'] = '%' . $searchphrase . '%';
+            $params['url_social'] = '%' . $searchphrase . '%';
+            $params['url_playnow'] = '%' . $searchphrase . '%';
+            $params['url_download'] = '%' . $searchphrase . '%';
+            $sql = 'select * from games
+            WHERE offline_status LIKE :offline_status
+            OR name LIKE :name
+            OR short_name LIKE :short_name
+            OR description LIKE :description
+            OR url_homepage LIKE :url_homepage
+            OR url_social LIKE :url_social
+            OR url_playnow LIKE :url_playnow
+            OR url_download LIKE :url_download
             ORDER BY id';
             $all_rows = $this->model->query_bind($sql, $params, 'object');
         } else {
-            $data['headline'] = 'Manage Players';
+            $data['headline'] = 'Manage Games';
             $all_rows = $this->model->get('id');
         }
 
         $pagination_data['total_rows'] = count($all_rows);
         $pagination_data['page_num_segment'] = 3;
         $pagination_data['limit'] = $this->_get_limit();
-        $pagination_data['pagination_root'] = 'players/manage';
-        $pagination_data['record_name_plural'] = 'players';
+        $pagination_data['pagination_root'] = 'games/manage';
+        $pagination_data['record_name_plural'] = 'games';
         $pagination_data['include_showing_statement'] = true;
         $data['pagination_data'] = $pagination_data;
 
         $data['rows'] = $this->_reduce_rows($all_rows);
         $data['selected_per_page'] = $this->_get_selected_per_page();
         $data['per_page_options'] = $this->per_page_options;
-        $data['view_module'] = 'players';
+        $data['view_module'] = 'games';
         $data['view_file'] = 'manage';
         $this->template('admin', $data);
     }
@@ -125,15 +201,15 @@ class Players extends Trongate
         $update_id = (int) segment(3);
 
         if ($update_id == 0) {
-            redirect('players/manage');
+            redirect('games/manage');
         }
 
         $data = $this->_get_data_from_db($update_id);
-        $data['active'] = ($data['active'] == 1 ? 'yes' : 'no');
+        $data['offline'] = ($data['offline'] == 1 ? 'yes' : 'no');
         $data['token'] = $token;
 
         if ($data == false) {
-            redirect('players/manage');
+            redirect('games/manage');
         } else {
             //generate picture folders, if required
             $picture_settings = $this->_init_picture_settings();
@@ -158,7 +234,7 @@ class Players extends Trongate
                 $data['draw_picture_uploader'] = true;
             }
             $data['update_id'] = $update_id;
-            $data['headline'] = 'Player Information';
+            $data['headline'] = 'Game Information';
             $data['filezone_settings'] = $this->_init_filezone_settings();
             $data['view_file'] = 'show';
             $this->template('admin', $data);
@@ -176,7 +252,7 @@ class Players extends Trongate
         foreach ($all_rows as $row) {
             $count++;
             if (($count >= $start_index) && ($count < $end_index)) {
-                $row->active = ($row->active == 1 ? 'yes' : 'no');
+                $row->offline = ($row->offline == 1 ? 'yes' : 'no');
                 $rows[] = $row;
             }
         }
@@ -193,9 +269,17 @@ class Players extends Trongate
 
         if ($submit == 'Submit') {
 
-            $this->validation_helper->set_rules('username', 'Username', 'required|min_length[3]|max_length[66]');
-            $this->validation_helper->set_rules('display_name', 'Display Name', 'required|min_length[3]|max_length[66]');
-            $this->validation_helper->set_rules('email_address', 'Email Address', 'min_length[7]|max_length[66]|valid_email_address|valid_email');
+            $this->validation_helper->set_rules('offline_status', 'Offline Status', 'min_length[2]|max_length[255]');
+            $this->validation_helper->set_rules('created_date', 'Created Date', 'required|valid_datetimepicker_us');
+            $this->validation_helper->set_rules('updated_date', 'Updated Date', 'valid_datetimepicker_us');
+            $this->validation_helper->set_rules('name', 'Name', 'min_length[2]|max_length[255]|required');
+            $this->validation_helper->set_rules('short_name', 'Short Name', 'min_length[2]|max_length[255]');
+            $this->validation_helper->set_rules('description', 'Description', 'min_length[2]|max_length[255]|required');
+            $this->validation_helper->set_rules('detail_information', 'Detail Information', 'required|min_length[2]');
+            $this->validation_helper->set_rules('url_homepage', 'URL Homepage', 'min_length[2]|max_length[255]|required');
+            $this->validation_helper->set_rules('url_social', 'URL Social', 'min_length[2]|max_length[255]|required');
+            $this->validation_helper->set_rules('url_playnow', 'URL Playnow', 'min_length[2]|max_length[255]');
+            $this->validation_helper->set_rules('url_download', 'URL Download', 'min_length[2]|max_length[255]');
 
             $result = $this->validation_helper->run();
 
@@ -203,21 +287,25 @@ class Players extends Trongate
 
                 $update_id = (int) segment(3);
                 $data = $this->_get_data_from_post();
-                $data['url_string'] = strtolower(url_title($data['username']));
-                $data['active'] = ($data['active'] == 1 ? 1 : 0);
+                $data['url_string'] = strtolower(url_title($data['name']));
+                $data['updated_date'] = str_replace(' at ', '', $data['updated_date']);
+                $data['updated_date'] = date('Y-m-d H:i', strtotime($data['updated_date']));
+                $data['created_date'] = str_replace(' at ', '', $data['created_date']);
+                $data['created_date'] = date('Y-m-d H:i', strtotime($data['created_date']));
+                $data['offline'] = ($data['offline'] == 1 ? 1 : 0);
 
                 if ($update_id > 0) {
                     //update an existing record
-                    $this->model->update($update_id, $data, 'players');
+                    $this->model->update($update_id, $data, 'games');
                     $flash_msg = 'The record was successfully updated';
                 } else {
                     //insert the new record
-                    $update_id = $this->model->insert($data, 'players');
+                    $update_id = $this->model->insert($data, 'games');
                     $flash_msg = 'The record was successfully created';
                 }
 
                 set_flashdata($flash_msg);
-                redirect('players/show/' . $update_id);
+                redirect('games/show/' . $update_id);
             } else {
                 //form submission error
                 $this->create();
@@ -236,18 +324,18 @@ class Players extends Trongate
         if (($submit == 'Yes - Delete Now') && ($params['update_id'] > 0)) {
             //delete all of the comments associated with this record
             $sql = 'delete from trongate_comments where target_table = :module and update_id = :update_id';
-            $params['module'] = 'players';
+            $params['module'] = 'games';
             $this->model->query_bind($sql, $params);
 
             //delete the record
-            $this->model->delete($params['update_id'], 'players');
+            $this->model->delete($params['update_id'], 'games');
 
             //set the flashdata
             $flash_msg = 'The record was successfully deleted';
             set_flashdata($flash_msg);
 
             //redirect to the manage page
-            redirect('players/manage');
+            redirect('games/manage');
         }
     }
 
@@ -291,12 +379,12 @@ class Players extends Trongate
         }
 
         $_SESSION['selected_per_page'] = $selected_index;
-        redirect('players/manage');
+        redirect('games/manage');
     }
 
     function _get_data_from_db($update_id)
     {
-        $record_obj = $this->model->get_where($update_id, 'players');
+        $record_obj = $this->model->get_where($update_id, 'games');
 
         if ($record_obj == false) {
             $this->template('error_404');
@@ -309,10 +397,18 @@ class Players extends Trongate
 
     function _get_data_from_post()
     {
-        $data['active'] = post('active', true);
-        $data['username'] = post('username', true);
-        $data['display_name'] = post('display_name', true);
-        $data['email_address'] = post('email_address', true);
+        $data['offline'] = post('offline', true);
+        $data['offline_status'] = post('offline_status', true);
+        $data['created_date'] = post('created_date', true);
+        $data['updated_date'] = post('updated_date', true);
+        $data['name'] = post('name', true);
+        $data['short_name'] = post('short_name', true);
+        $data['description'] = post('description', true);
+        $data['detail_information'] = post('detail_information', true);
+        $data['url_homepage'] = post('url_homepage', true);
+        $data['url_social'] = post('url_social', true);
+        $data['url_playnow'] = post('url_playnow', true);
+        $data['url_download'] = post('url_download', true);
         return $data;
     }
 
@@ -323,9 +419,9 @@ class Players extends Trongate
         $picture_settings['max_height'] = 1200;
         $picture_settings['resized_max_width'] = 450;
         $picture_settings['resized_max_height'] = 450;
-        $picture_settings['destination'] = 'players_pics';
+        $picture_settings['destination'] = 'games_pics';
         $picture_settings['target_column_name'] = 'picture';
-        $picture_settings['thumbnail_dir'] = 'players_pics_thumbnails';
+        $picture_settings['thumbnail_dir'] = 'games_pics_thumbnails';
         $picture_settings['thumbnail_max_width'] = 120;
         $picture_settings['thumbnail_max_height'] = 120;
         $picture_settings['upload_to_module'] = true;
@@ -408,5 +504,55 @@ class Players extends Trongate
                 redirect($_SERVER['HTTP_REFERER']);
             }
         }
+    }
+
+    function ditch_picture($update_id)
+    {
+
+        if (!is_numeric($update_id)) {
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $result = $this->model->get_where($update_id);
+
+        if ($result == false) {
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        $picture_settings = $this->_init_picture_settings();
+        $target_column_name = $picture_settings['target_column_name'];
+        $picture_name = $result->$target_column_name;
+
+        if ($picture_settings['upload_to_module'] == true) {
+            $picture_path = APPPATH . 'modules/' . segment(1) . '/assets/' . $picture_settings['destination'] . '/' . $update_id . '/' . $picture_name;
+        } else {
+            $picture_path = APPPATH . 'public/' . $picture_settings['destination'] . '/' . $update_id . '/' . $picture_name;
+        }
+
+        $picture_path = str_replace('\\', '/', $picture_path);
+
+        if (file_exists($picture_path)) {
+            unlink($picture_path);
+        }
+
+        if (isset($picture_settings['thumbnail_dir'])) {
+            $ditch = $picture_settings['destination'] . '/' . $update_id;
+            $replace = $picture_settings['thumbnail_dir'] . '/' . $update_id;
+            $thumbnail_path = str_replace($ditch, $replace, $picture_path);
+
+            if (file_exists($thumbnail_path)) {
+                unlink($thumbnail_path);
+            }
+        }
+
+        $data[$target_column_name] = '';
+        $this->model->update($update_id, $data);
+
+        $flash_msg = 'The picture was successfully deleted';
+        set_flashdata($flash_msg);
+        redirect($_SERVER['HTTP_REFERER']);
     }
 }
